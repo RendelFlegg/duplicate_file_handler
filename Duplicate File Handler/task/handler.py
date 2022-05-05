@@ -1,5 +1,6 @@
 import argparse
 import os
+import hashlib
 
 parser = argparse.ArgumentParser(description="Let's parse some directory")
 parser.add_argument('dir', nargs='?', type=str, default=False, help='Enter directory')
@@ -42,3 +43,32 @@ for key in keys:
         if item.endswith(f'{file_format}'):
             print(item)
     print()
+
+answer = input('Check for duplicates?\n')
+while answer.lower() not in ['yes', 'no']:
+    print('Wrong option')
+    answer = input('Check for duplicates?\n')
+
+if answer.lower() == 'yes':
+    counter = 1
+    for key in keys:
+        print(key, 'bytes')
+        list_of_items = folder_dictionary[key]
+        folder_dictionary[key] = {}
+        for item in list_of_items:
+            if item.endswith(f'{file_format}'):
+                item_hash = hashlib.md5()
+                with open(item, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        item_hash.update(chunk)
+                if item_hash.hexdigest() not in folder_dictionary[key]:
+                    folder_dictionary[key][item_hash.hexdigest()] = []
+                folder_dictionary[key][item_hash.hexdigest()].append(item)
+        for hash_key in folder_dictionary[key]:
+            if len(folder_dictionary[key][hash_key]) > 1:
+                print(f'Hash: {hash_key}')
+                for item in folder_dictionary[key][hash_key]:
+                    if item.endswith(f'{file_format}'):
+                        print(f'{counter}.', item)
+                        counter += 1
+        print()
